@@ -1,0 +1,7 @@
+%{"bitcask": {:hex, :bitcask, "2.0.2", "3cdaa5c4f4b59a5dc0226393c284e91556725a1d738736b01103e1946f2a0101", [:rebar3], []},
+  "disc_union": {:git, "https://github.com/x4lldux/disc_union.git", "390849337db8988f45b177cfed76cb54c1c23189", []},
+  "gproc": {:hex, :gproc, "0.6.1", "4579663e5677970758a05d8f65d13c3e9814ec707ad51d8dcef7294eda1a730c", [:rebar3], []},
+  "jobs": {:git, "https://github.com/uwiger/jobs.git", "624c28b0197d3e8cd5026ff5337f49c3526597b4", []},
+  "meck": {:git, "git://github.com/eproxus/meck.git", "dde759050eff19a1a80fd854d7375174b191665d", [ref: "0.8.2"]},
+  "parse_trans": {:git, "git://github.com/uwiger/parse_trans.git", "6f3645afb43c7c57d61b54ef59aecab288ce1013", [tag: "3.0"]},
+  "uuid": {:hex, :uuid, "1.1.5", "96cb36d86ee82f912efea4d50464a5df606bf3f1163d6bdbb302d98474969369", [:mix], []}}
