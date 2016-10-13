@@ -31,7 +31,9 @@ defmodule NeurytEventStoreBitcask.Mixfile do
   defp deps do
     [
       {:bitcask, "~> 2.0"},
-      {:neuryt, path: "../neuryt"}
+      {:neuryt, path: "../neuryt"},
+      {:dialyxir, "~> 0.3.5", only: [:test, :dev]},
+      {:excoveralls, "~> 0.5", only: :test},
     ]
   end
 end
