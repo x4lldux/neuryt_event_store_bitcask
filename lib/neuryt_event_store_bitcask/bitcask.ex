@@ -2,7 +2,8 @@ defmodule Neuryt.EventStore.Bitcask do
   @behaviour Neuryt.EventStore
 
   def start_link() do
-    db_path = Application.get_env :neuryt_event_store_bitcask, :db_path, "eventstore_db"
+    db_path = Application.get_env :neuryt_event_store_bitcask, :db_path,
+      "eventstore_db"
     db = Bitcask.open db_path, [:read_write]
 
     Agent.start_link(fn -> db end, name: __MODULE__)
@@ -15,7 +16,8 @@ defmodule Neuryt.EventStore.Bitcask do
   end
 
   def init() do
-    db_path = Application.get_env :neuryt_event_store_bitcask, :db_path, "eventstore_db"
+    db_path = Application.get_env :neuryt_event_store_bitcask, :db_path,
+      "eventstore_db"
     Bitcask.open db_path, [:read_write]
   end
 
@@ -55,7 +57,6 @@ defmodule Neuryt.EventStore.Bitcask do
   def load_all_events() do
     db = Agent.get(__MODULE__, &id/1)
     events = Bitcask.fold_keys(db, &fold_event_keys/2, [])
-
     {:ok, events}
   end
 
@@ -68,8 +69,24 @@ defmodule Neuryt.EventStore.Bitcask do
     stream_key =
       {:stream, stream_id}
       |> :erlang.term_to_binary
-    events = Bitcask.get(db, stream_key)
-    {:ok, events}
+
+
+    case Bitcask.get(db, stream_key) do
+      {:ok, event_ids} ->
+         events =
+          event_ids
+          |> Enum.map(fn id ->
+               event_key =
+                 {:event, id, stream_id}
+                 |> :erlang.term_to_binary
+               {:ok, e} = Bitcask.get(db, event_key)
+               e
+             end)
+
+        {:ok, events}
+      err ->
+        err
+    end
   end
 
   def count_stream_events(stream_id),
