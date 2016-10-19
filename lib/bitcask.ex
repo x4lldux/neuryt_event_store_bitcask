@@ -9,7 +9,7 @@ defmodule Bitcask do
         {:tombstone_version, 2},
         {:open_timeout, 4},
         {:sync_strategy, :none},
-        {:require_hint_crc, false},
+        {:require_hint_crc, true},
         {:merge_window, :always},
         {:frag_merge_trigger, 60},
         {:dead_bytes_merge_trigger, 536870912},
@@ -111,6 +111,79 @@ defmodule Bitcask do
     :bitcask.fold(db.ref, &(func.(&1, encode(&2), &3)), options)
   end
 
+  @doc ~S"""
+  Is the DB frozen?
+  """
+  @spec is_frozen?(DB.t) :: boolean()
+  def is_frozen?(db), do: :bitcask.is_frozen(db.ref)
+
+  @doc ~S"""
+  Creates a Stream object with all the keys in the database.
+
+  Same as calling `Bitcask.stream_keys(db, -1, -1)`.
+  """
+  @spec stream_keys(DB.t) :: Stream.t
+  def stream_keys(db), do: do_stream(db, -1, -1, false)
+
+  @doc ~S"""
+  Creates a Stream object with all the keys in the database.
+
+  Check the number of updates since pending was created is less than the maximum
+  and that the current view is not too old.
+  Call with ts set to zero to force a wait on any pending keydir.
+  Set maxage or maxputs negative to ignore them.  Set both negative to force
+  using the keydir - useful when a process has waited once and needs to run
+  next time.
+  """
+  @spec stream_keys(DB.t, Integer.t, Integer.t) :: Stream.t
+  def stream_keys(db, max_age, max_puts), do: do_stream(db, max_age, max_puts, false)
+
+  @doc ~S"""
+  Creates a Stream object with all the {key, val} objects in the database.
+
+  Same as calling `Bitcask.stream_keyvals(db, -1, -1)`.
+  """
+  @spec stream_keyvals(DB.t) :: Stream.t
+  def stream_keyvals(db), do: do_stream(db, -1, -1, true)
+
+  @doc ~S"""
+  Creates a Stream object with all the {key, val} objects in the database.
+
+  Check the number of updates since pending was created is less than the maximum
+  and that the current view is not too old.
+  Call with ts set to zero to force a wait on any pending keydir.
+  Set maxage or maxputs negative to ignore them.  Set both negative to force
+  using the keydir - useful when a process has waited once and needs to run
+  next time.
+  """
+  @spec stream_keyvals(DB.t, Integer.t, Integer.t) :: Stream.t
+  def stream_keyvals(db, max_age, max_puts), do: do_stream(db, max_age, max_puts, true)
+
+
+  defp do_stream(db, max_age, max_puts, get_value) do
+    Stream.resource(
+      fn ->
+        iterator_db = open(db.folder)
+        :ok = :bitcask.iterator(iterator_db.ref, max_age, max_puts)
+        iterator_db
+      end,
+      fn iterator_db ->
+        case :bitcask.iterator_next iterator_db.ref do
+          :not_found -> {:halt, iterator_db}
+          {:bitcask_entry, key, _, _, _, _} ->
+            if get_value do
+              {[{key, get!(iterator_db, key)}], iterator_db}
+            else
+              {[key], iterator_db}
+            end
+        end
+      end,
+      fn iterator_db ->
+        :bitcask.iterator_release iterator_db.ref
+        close(iterator_db)
+      end
+    )
+  end
 
 
   defp encode(val) when is_binary(val), do: val
