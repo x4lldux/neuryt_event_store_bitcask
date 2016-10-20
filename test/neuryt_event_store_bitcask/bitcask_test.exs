@@ -55,16 +55,20 @@ defmodule Neuryt.EventStore.BitcaskTest do
 
   test "can load saved event from a stream" do
     event1 = "fake_event1"
-    event1_enveloped = %{id: 1, event: event1}
-    stream1_id = "fake_stream1_id"
+    event1_enveloped = %{id: :rand.uniform, event: event1}
+    stream1_id = :rand.uniform |> :erlang.phash2
     event2 = "fake_event2"
-    event2_enveloped = %{id: 2, event: event2}
-    stream2_id = "fake_stream2_id"
+    event2_enveloped = %{id: :rand.uniform, event: event2}
+    stream2_id = :rand.uniform |> :erlang.phash2
+    event3 = "fake_event3"
+    event3_enveloped = %{id: :rand.uniform, event: event3}
 
     assert :ok = Bitcask.save_event(event1_enveloped, stream1_id)
     assert :ok = Bitcask.save_event(event2_enveloped, stream2_id)
+    assert :ok = Bitcask.save_event(event3_enveloped, stream1_id)
 
-    assert Bitcask.load_stream_events(stream1_id) == {:ok, [event1_enveloped]}
+    assert Bitcask.load_stream_events(stream1_id) == {:ok, [event1_enveloped,
+                                                            event3_enveloped]}
     assert Bitcask.load_stream_events(stream2_id) == {:ok, [event2_enveloped]}
   end
 
@@ -78,7 +82,6 @@ defmodule Neuryt.EventStore.BitcaskTest do
     event3 = "fake_event3"
     event3_enveloped = %{id: :rand.uniform, event: event3}
     stream3_id = :rand.uniform |> :erlang.phash2
-
 
     assert :ok = Bitcask.save_event(event1_enveloped, stream1_id)
     assert :ok = Bitcask.save_event(event2_enveloped, stream2_id)
