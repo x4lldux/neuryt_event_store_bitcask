@@ -7,10 +7,14 @@ defmodule NeurytEventStoreBitcask do
     import Supervisor.Spec, warn: false
 
     # Define workers and child supervisors to be supervised
-    children = [
-      # Starts a worker by calling: NeurytEventStoreBitcask.Worker.start_link(arg1, arg2, arg3)
-      # worker(NeurytEventStoreBitcask.Worker, [arg1, arg2, arg3]),
-    ]
+
+    children =
+      case Mix.env do
+        :test ->
+          []
+        _ ->
+          [ worker(Neuryt.EventStore.Bitcask, []) ]
+      end
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
     # for other strategies and supported options
