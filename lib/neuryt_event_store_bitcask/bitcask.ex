@@ -33,8 +33,12 @@ defmodule Neuryt.EventStore.Bitcask do
     GenServer.call __MODULE__, {:load_stream_events, stream_id}
   end
 
-  def count_stream_events(stream_id),
-    do: {:ok, load_stream_events(stream_id) |> elem(1) |> length}
+  def count_stream_events(stream_id) do
+    case load_stream_events(stream_id) do
+      {:ok, events} -> {:ok, length events}
+      {:error, reason} -> {:error, reason}
+    end
+  end
 
   def list_streams() do
     GenServer.call __MODULE__, :list_streams
@@ -161,8 +165,9 @@ defmodule Neuryt.EventStore.Bitcask do
              end)
 
         {:ok, Enum.reverse events}
+      :not_found -> {:ok, []}
       err ->
-        err
+        {:error, err}
     end
   end
 
