@@ -85,7 +85,7 @@ defmodule Neuryt.EventStore.Bitcask do
   end
 
   def handle_call(:list_streams, _from, state = %{db: db}) do
-    {:replu, do_list_streams(db), state}
+    {:reply, do_list_streams(db), state}
   end
 
 
